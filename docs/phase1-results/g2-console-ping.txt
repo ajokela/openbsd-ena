@@ -1,0 +1,72 @@
+UEFI firmware (version  built at 09:00:00 on Nov  1 2018)
+[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mdisks: sd0*
+>> OpenBSD/arm64 BOOTAA64 1.24
+|/-\|/-\|/-\|/-\|/-\|/booting sd0a:/bsd.rd: -\|/-\3214704|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/+1365292-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/+12715224-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/[2026-06-19T19:25:20.583290]-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\[2026-06-19T19:25:22.683339]|/-+651656\ [295920|/-\|/-\|/-\|/-\|/-+91+760200\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|+312474/-\|/-\|/-\|/-\|/-\]=0x140dbd8
+FACP APIC SPCR GTDT MCFG SLIT IORT PPTT 
+Copyright (c) 1982, 1986, 1989, 1991, 1993
+	The Regents of the University of California.  All rights reserved.
+Copyright (c) 1995-2026 OpenBSD. All rights reserved.  https://www.OpenBSD.org
+
+OpenBSD 7.9 (RAMDISK.ENA) #0: Fri Jun 19 14:58:34 EDT 2026
+    root@obsd-vm.my.domain:/usr/src/sys/arch/arm64/compile/RAMDISK.ENA
+real mem  = 490606592 (467MB)
+avail mem = 436944896 (416MB)
+random: good seed from bootblocks
+mainbus0 at root: ACPI
+psci0 at mainbus0: PSCI 1.0, SMCCC 1.1
+efi0 at mainbus0: UEFI 2.7
+efi0: EDK II rev 0x10000
+smbios0 at efi0: SMBIOS 3.0.0
+smbios0: vendor Amazon EC2 version "1.0" date 11/1/2018
+smbios0: Amazon EC2 t4g.nano
+cpu0 at mainbus0 mpidr 0: ARM Neoverse N1 r3p1
+cpu0: 64KB 64b/line 4-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu0: 0KB 64b/line 1-way L2 cache
+cpu0: DP,RDM,Atomic,CRC32,SHA2,SHA1,AES+PMULL,LRCPC,DPB,ASID16,PAN+ATS1E1,LO,HPDS,VH,HAFDBS,CSV3,CSV2,RAS,AdvSIMD+HP,FP+HP,SSBS+MSR
+agintc0 at mainbus0 shift 4:4 nirq 128 nredist 2: "interrupt-controller"
+agintcmsi0 at agintc0
+agtimer0 at mainbus0: 121875 kHz
+acpi0 at mainbus0: ACPI 6.0
+acpi0: tables DSDT FACP APIC SPCR GTDT MCFG SLIT IORT PPTT
+acpimcfg0 at acpi0
+acpimcfg0: addr 0x20000000, bus 0-255
+acpiiort0 at acpi0
+"QEMU0002" at acpi0 not configured
+"AMZNC10C" at acpi0 not configured
+acpipci0 at acpi0 PCI0
+pci0 at acpipci0
+vendor "Amazon.com", unknown product 0x0200 (class bridge subclass host, rev 0x00) at pci0 dev 0 function 0 not configured
+puc0 at pci0 dev 1 function 0 vendor "Amazon.com", unknown product 0x8250 rev 0x00: ports: 16 com
+com0 at puc0 port 0 irq 37: ns16550a, 16 byte fifo
+nvme0 at pci0 dev 4 function 0 vendor "Amazon.com", unknown product 0x8061 rev 0x00: msix, NVMe 1.0
+nvme0: Amazon Elastic Block Store, firmware 1.0, serial vol0a7b367bf9e0dcee6
+nvme0: unable to create io q
+ena0 at pci0 dev 5 function 0 "Amazon.com Elastic Network Adapter (VF)" rev 0x00: mgmt msix io msix
+ena0: ENA ver 0.10, ctrl ver 0, MTU max 9216, address 12:67:72:7d:96:01
+ena0: admin cmd opcode 8 status 3
+ena0: GET_FEATURE(LLQ) failed (5), using host TX mode
+"ARMH0061" at acpi0 not configured
+"PNP0C0C" at acpi0 not configured
+"PNP0C0E" at acpi0 not configured
+"ACPI0013" at acpi0 not configured
+softraid0 at root
+scsibus0 at softraid0: 256 targets
+root on rd0a swap on rd0b dump on rd0b
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+init: can't open /dev/console: Device not configured
+

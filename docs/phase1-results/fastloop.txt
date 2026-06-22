@@ -1,0 +1,294 @@
+UEFI firmware (version 2024.02-2ubuntu0.8 built at 10:08:54 on Dec 10 2025)
+BdsDxe: loading Boot0001 "UEFI Misc Device" from PciRoot(0x0)/Pci(0x1,0x0)
+BdsDxe: starting Boot0001 "UEFI Misc Device" from PciRoot(0x0)/Pci(0x1,0x0)
+disks: sd0*
+>> OpenBSD/arm64 BOOTAA64 1.24
+boot>
+booting sd0a:/bsd: 12770060+3009160+322032+872088 [1118441+91+1405416+903616]=0x1668880
+FACP APIC PPTT GTDT MCFG SPCR DBG2 IORT
+[ using 3428344 bytes of bsd ELF symbol table ]
+Copyright (c) 1982, 1986, 1989, 1991, 1993
+        The Regents of the University of California.  All rights reserved.
+Copyright (c) 1995-2026 OpenBSD. All rights reserved.  https://www.OpenBSD.org
+
+OpenBSD 7.9 (GENERIC.MP) #222: Wed May  6 18:07:56 MDT 2026
+    deraadt@arm64.openbsd.org:/usr/src/sys/arch/arm64/compile/GENERIC.MP
+real mem  = 8582795264 (8185MB)
+avail mem = 8183578624 (7804MB)
+random: good seed from bootblocks
+mainbus0 at root: ACPI
+psci0 at mainbus0: PSCI 1.3, SMCCC 1.1
+efi0 at mainbus0: UEFI 2.7
+efi0: Ubuntu distribution of EDK II rev 0x10000
+smbios0 at efi0: SMBIOS 3.0.0
+smbios0: vendor Ubuntu distribution of EDK II
+smbios0: QEMU KVM Virtual Machine
+cpu0 at mainbus0 mpidr 0: ARM Cortex-A72 r0p3
+cpu0: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu0: CRC32,SHA2,SHA1,AES+PMULL,ASID16,CSV3
+cpu1 at mainbus0 mpidr 1: ARM Cortex-A72 r0p3
+cpu1: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu2 at mainbus0 mpidr 2: ARM Cortex-A72 r0p3
+cpu2: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu3 at mainbus0 mpidr 3: ARM Cortex-A72 r0p3
+cpu3: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu4 at mainbus0 mpidr 4: ARM Cortex-A72 r0p3
+cpu4: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu5 at mainbus0 mpidr 5: ARM Cortex-A72 r0p3
+cpu5: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu6 at mainbus0 mpidr 6: ARM Cortex-A72 r0p3
+cpu6: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu7 at mainbus0 mpidr 7: ARM Cortex-A72 r0p3
+cpu7: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+apm0 at mainbus0
+agintc0 at mainbus0 shift 4:4 nirq 288 nredist 8 ipi 0: "interrupt-controller"
+agintcmsi0 at agintc0
+agtimer0 at mainbus0: 83333 kHz
+acpi0 at mainbus0: ACPI 6.0
+acpi0: sleep states
+acpi0: tables DSDT FACP APIC PPTT GTDT MCFG SPCR DBG2 IORT
+acpi0: wakeup devices
+acpimcfg0 at acpi0
+acpimcfg0: addr 0x4010000000, bus 0-255
+acpiiort0 at acpi0
+acpicpu0 at acpi0 C000
+acpicpu1 at acpi0 C001
+acpicpu2 at acpi0 C002
+acpicpu3 at acpi0 C003
+acpicpu4 at acpi0 C004
+acpicpu5 at acpi0 C005
+acpicpu6 at acpi0 C006
+acpicpu7 at acpi0 C007
+pluart0 at acpi0 COM0 addr 0x9000000/0x1000 irq 33
+pluart0: console
+"QEMU0002" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+acpipci0 at acpi0 PCI0
+pci0 at acpipci0
+"Red Hat Host" rev 0x00 at pci0 dev 0 function 0 not configured
+virtio0 at pci0 dev 1 function 0 "Qumranet Virtio Storage" rev 0x00
+vioblk0 at virtio0
+virtio0: irq 36
+scsibus0 at vioblk0: 1 targets
+sd0 at scsibus0 targ 0 lun 0: <VirtIO, Block Device, >
+sd0: 20480MB, 512 bytes/sector, 41943040 sectors
+virtio1 at pci0 dev 2 function 0 "Qumranet Virtio Network" rev 0x00
+vio0 at virtio1: 1 queue, address 52:54:00:12:34:56
+virtio1: irq 37
+unknown vendor 0x1d0f product 0xec20 (class network subclass ethernet, rev 0x00) at pci0 dev 3 function 0 not configured
+acpige0 at acpi0 irq 41
+acpibtn0 at acpi0: PWRB
+vscsi0 at root
+scsibus1 at vscsi0: 256 targets
+softraid0 at root
+scsibus2 at softraid0: 256 targets
+root on sd0a (5a613f146c8a44d1.a) swap on sd0b dump on sd0b
+WARNING: / was not properly unmounted
+Automatic boot in progress: starting file system checks.
+/dev/sd0a (5a613f146c8a44d1.a): 1684 files, 53159 used, 158368 free (40 frags, 19791 blocks, 0.0% fragmentation)
+/dev/sd0a (5a613f146c8a44d1.a): MARKING FILE SYSTEM CLEAN
+/dev/sd0l (5a613f146c8a44d1.l): 1 files, 1 used, 1339174 free (14 frags, 167395 blocks, 0.0% fragmentation)
+/dev/sd0l (5a613f146c8a44d1.l): MARKING FILE SYSTEM CLEAN
+/dev/sd0d (5a613f146c8a44d1.d): 9 files, 919 used, 278568 free (32 frags, 34817 blocks, 0.0% fragmentation)
+/dev/sd0d (5a613f146c8a44d1.d): MARKING FILE SYSTEM CLEAN
+/dev/sd0f (5a613f146c8a44d1.f): UNREF FILE I=129726  OWNER=root MODE=100444
+/dev/sd0f: SIZE=448472 MTIME=Jun 18 18:30 2026  (CLEARED)
+/dev/sd0f (5a613f146c8a44d1.f): UNREF FILE I=181575  OWNER=root MODE=100444
+/dev/sd0f: SIZE=4709920 MTIME=Jun 18 18:30 2026  (CLEARED)
+/dev/sd0f (5a613f146c8a44d1.f): FREE BLK COUNT(S) WRONG IN SUPERBLK (SALVAGED)
+/dev/sd0f (5a613f146c8a44d1.f): SUMMARY INFORMATION BAD (SALVAGED)
+/dev/sd0f (5a613f146c8a44d1.f): BLK(S) MISSING IN BIT MAPS (SALVAGED)
+/dev/sd0f (5a613f146c8a44d1.f): 17941 files, 627483 used, 391476 free (372 frags, 48888 blocks, 0.0% fragmentation)
+/dev/sd0f (5a613f146c8a44d1.f): MARKING FILE SYSTEM CLEAN
+/dev/sd0g (5a613f146c8a44d1.g): 5504 files, 113195 used, 158372 free (164 frags, 19776 blocks, 0.1% fragmentation)
+/dev/sd0g (5a613f146c8a44d1.g): MARKING FILE SYSTEM CLEAN
+/dev/sd0h (5a613f146c8a44d1.h): 1465 files, 271031 used, 650880 free (104 frags, 81347 blocks, 0.0% fragmentation)
+/dev/sd0h (5a613f146c8a44d1.h): MARKING FILE SYSTEM CLEAN
+/dev/sd0k (5a613f146c8a44d1.k): 1193 files, 28384 used, 4143855 free (103 frags, 517969 blocks, 0.0% fragmentation)
+/dev/sd0k (5a613f146c8a44d1.k): MARKING FILE SYSTEM CLEAN
+/dev/sd0j (5a613f146c8a44d1.j): 15157 files, 327527 used, 742552 free (72 frags, 92810 blocks, 0.0% fragmentation)
+/dev/sd0j (5a613f146c8a44d1.j): MARKING FILE SYSTEM CLEAN
+/dev/sd0e (5a613f146c8a44d1.e): UNREF FILE I=51906  OWNER=root MODE=100444
+/dev/sd0e: SIZE=11967 MTIME=Jun 18 18:39 2026  (CLEARED)
+/dev/sd0e (5a613f146c8a44d1.e): FREE BLK COUNT(S) WRONG IN SUPERBLK (SALVAGED)
+/dev/sd0e (5a613f146c8a44d1.e): SUMMARY INFORMATION BAD (SALVAGED)
+/dev/sd0e (5a613f146c8a44d1.e): BLK(S) MISSING IN BIT MAPS (SALVAGED)
+/dev/sd0e (5a613f146c8a44d1.e): 235 files, 3964 used, 396795 free (59 frags, 49592 blocks, 0.0% fragmentation)
+/dev/sd0e (5a613f146c8a44d1.e): MARKING FILE SYSTEM CLEAN
+pf enabled
+starting network
+reordering: ld.so libc libcrypto sshd sshd-session sshd-auth ssh-agent.
+starting early daemons: syslogd pflogd ntpd.
+starting RPC daemons:.
+savecore: no core dump
+checking quotas: done.
+clearing /tmp
+kern.securelevel: 0 -> 1
+creating runtime link editor directory cache.
+preserving editor files.
+starting network daemons: sshd smtpd sndiod.
+starting local daemons: cron.
+Sun Jun 21 21:07:50 EDT 2026
+
+OpenBSD/arm64 (obsd-vm.my.domain) (console)
+
+login: syncing disks... done
+rebooting...
+UEFI firmware (version 2024.02-2ubuntu0.8 built at 10:08:54 on Dec 10 2025)
+BdsDxe: loading Boot0001 "UEFI Misc Device" from PciRoot(0x0)/Pci(0x1,0x0)
+BdsDxe: starting Boot0001 "UEFI Misc Device" from PciRoot(0x0)/Pci(0x1,0x0)
+disks: sd0*
+>> OpenBSD/arm64 BOOTAA64 1.24
+booting sd0a:/bsd.rd: 3214868+1346708+12715064+652904 [295541+91+759720+312259]=0x140dbe8
+FACP APIC PPTT GTDT MCFG SPCR DBG2 IORT
+Copyright (c) 1982, 1986, 1989, 1991, 1993
+        The Regents of the University of California.  All rights reserved.
+Copyright (c) 1995-2026 OpenBSD. All rights reserved.  https://www.OpenBSD.org
+
+OpenBSD 7.9 (RAMDISK.ENA) #0: Sun Jun 21 21:11:36 EDT 2026
+    root@obsd-vm.my.domain:/usr/src/sys/arch/arm64/compile/RAMDISK.ENA
+real mem  = 8582795264 (8185MB)
+avail mem = 8185950208 (7806MB)
+random: good seed from bootblocks
+mainbus0 at root: ACPI
+psci0 at mainbus0: PSCI 1.3, SMCCC 1.1
+efi0 at mainbus0: UEFI 2.7
+efi0: Ubuntu distribution of EDK II rev 0x10000
+smbios0 at efi0: SMBIOS 3.0.0
+smbios0: vendor Ubuntu distribution of EDK II
+smbios0: QEMU KVM Virtual Machine
+cpu0 at mainbus0 mpidr 0: ARM Cortex-A72 r0p3
+cpu0: 0KB 64b/line 1-way L1 PIPT I-cache, 0KB 64b/line 1-way L1 D-cache
+cpu0: CRC32,SHA2,SHA1,AES+PMULL,ASID16,CSV3
+agintc0 at mainbus0 shift 4:4 nirq 288 nredist 8: "interrupt-controller"
+agintcmsi0 at agintc0
+agtimer0 at mainbus0: 83333 kHz
+acpi0 at mainbus0: ACPI 6.0
+acpi0: tables DSDT FACP APIC PPTT GTDT MCFG SPCR DBG2 IORT
+acpimcfg0 at acpi0
+acpimcfg0: addr 0x4010000000, bus 0-255
+acpiiort0 at acpi0
+pluart0 at acpi0 COM0 addr 0x9000000/0x1000 irq 33
+pluart0: console
+"QEMU0002" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+"LNRO0005" at acpi0 not configured
+acpipci0 at acpi0 PCI0
+pci0 at acpipci0
+"Red Hat Host" rev 0x00 at pci0 dev 0 function 0 not configured
+virtio0 at pci0 dev 1 function 0 "Qumranet Virtio Storage" rev 0x00
+vioblk0 at virtio0
+virtio0: irq 36
+scsibus0 at vioblk0: 1 targets
+sd0 at scsibus0 targ 0 lun 0: <VirtIO, Block Device, >
+sd0: 20480MB, 512 bytes/sector, 41943040 sectors
+virtio1 at pci0 dev 2 function 0 "Qumranet Virtio Network" rev 0x00
+vio0 at virtio1: 1 queue, address 52:54:00:12:34:56
+virtio1: irq 37
+ena0 at pci0 dev 3 function 0 "Amazon.com Elastic Network Adapter (VF)" rev 0x00: mgmt msix io msixena0: STS post-reset=0x1
+ena0: STS=0x1 healthy at [post-AENQ-register (in admin_init)]
+ena0: STS post-admin=0x1
+ena0: STS post-hostattr=0x1
+ena0: devattr supported_features=0x140059f6 capabilities=0x1d (AENQ_CONFIG bit=0x4000000)
+ena0: devattr CQ status=0 cmd_id=0x1 flags=0x1 sq_head=0
+
+ena0: ENA ver 0.10, ctrl ver 0, MTU max 9216, address 12:57:a4:7c:53:3b
+ena0: STS post-devattr=0x1
+ena0: TX mode LLQ (push, 128B entry, 2 hdr descs, 96 hdr bytes)
+ena0: AENQ supported=0xff enabled=0x17 (KEEP_ALIVE bit=0x10)
+ena0: AENQ GET CQ status=0 cmd_id=0x4 flags=0x1 sq_head=0 raw=000000ff 000000ff 00000000 00000000
+ena0: STS=0x1 healthy at [post-SET(AENQ_CONFIG)]
+ena0: STS=0x1 healthy at [post-INTR_MASK-unmask]
+ena0: STS=0x1 healthy at [post-AENQ_HEAD_DB]
+ena0: STS post-aenq=0x1 (post-llq too)
+ena0: ATTACH-END pre-init STS=0x1
+ena0: ATTACH-END ena_init rc=0 STS=0x1 running=1
+"ACPI0013" at acpi0 not configured
+"PNP0C0C" at acpi0 not configured
+"" at acpi0 not configured
+softraid0 at root
+scsibus1 at softraid0: 256 targets
+ena0: link UP
+root on rd0a swap on rd0b dump on rd0b
+ena0: SMOKE settle t=0 STS=0x1 mgmt_intr=2 aenq_proc=2
+ena0: SMOKE settle t=2 STS=0x1 mgmt_intr=4 aenq_proc=4
+ena0: SMOKE settle t=4 STS=0x1 mgmt_intr=6 aenq_proc=6
+ena0: SMOKE settle t=6 STS=0x1 mgmt_intr=8 aenq_proc=8
+ena0: SMOKE pre-init STS=0x1 mgmt_intr=9 aenq_proc=9
+ena0: SMOKE AENQ head=25 phase=1 depth=16 flags[0..7]=01 01 01 01 01 01 01 01
+ena0: SMOKE init rc=0 running=1 link=1
+ena0: SMOKE inject DHCP discover len=291
+ena0: SMOKE if_enqueue rc=0 prod=0 cons=0
+ena0: SMOKE_TX complete req_id=0 cons=1
+ena0: SMOKE_RX len=590 etype=0x0800
+ena0: SMOKE t=0 link=1 prod=1 cons=1
+ena0: SMOKE t=1 link=1 prod=1 cons=1
+ena0: SMOKE t=2 link=1 prod=1 cons=1
+ena0: SMOKE t=3 link=1 prod=1 cons=1
+ena0: SMOKE t=4 link=1 prod=1 cons=1
+ena0: SMOKE t=5 link=1 prod=1 cons=1
+ena0: SMOKE t=6 link=1 prod=1 cons=1
+ena0: SMOKE t=7 link=1 prod=1 cons=1
+ena0: SMOKE t=8 link=1 prod=1 cons=1
+

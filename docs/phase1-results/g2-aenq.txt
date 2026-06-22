@@ -1,0 +1,17 @@
+Task 4 (AENQ bring-up + link state) — hardware checkpoint: PENDING.
+
+This file is a placeholder. The on-hardware checkpoint for Task 4 is gated by
+the controller-batched build (the real compile gate; the implementer cannot
+build on macOS) and the Task 2 ramdisk tooling, neither of which has run on
+this branch yet. Do NOT treat the absence of console output here as a pass.
+
+Expected console markers once the ramdisk boots on a t4g.nano and the AENQ is
+serviced (auto-run script: dmesg | grep ena0):
+  ena0: ... attached
+  ena0: link UP
+
+The "link UP"/"link DOWN" line is emitted by ena_aenq_intr() in
+sys/dev/pci/if_ena.c on an ENA_ADMIN_LINK_CHANGE event, decoding the
+ENA_ADMIN_AENQ_LINK_CHANGE_DESC_LINK_STATUS_MASK bit.
+
+Replace this file with the scraped serial console when the checkpoint runs.

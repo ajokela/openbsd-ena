@@ -1,0 +1,27 @@
+Task 6 (RX path: descriptor ring, mbuf DMA, RX interrupt to if_input) —
+hardware checkpoint: PENDING.
+
+This file is a placeholder. The on-hardware checkpoint for Task 6 is gated by
+the controller-batched build (the real compile gate; the implementer cannot
+build on macOS) and the Task 2 ramdisk tooling, neither of which has run on
+this branch yet. Do NOT treat the absence of console output here as a pass.
+
+Expected behaviour once the ramdisk boots on a t4g.nano and traffic arrives.
+The auto-run script does:
+  ifconfig ena0 inet 169.254.1.2/30 up
+  (some traffic)
+  netstat -in        # expect nonzero Ipkts on ena0
+
+Marker (printed by the ramdisk harness after scraping netstat):
+  ENA_P1: rx <n>     # <n> nonzero
+
+The RX path that produces those packets:
+  - ena_init() creates the IO RX queue (CREATE_CQ then CREATE_SQ, RX
+    direction) and posts mbuf clusters via ena_rx_fill().
+  - The device DMA-writes received frames into the clusters and posts
+    completions on the RX CQ, raising the IO MSI-X vector (vector 1).
+  - ena_intr_io() -> ena_rx_intr() -> ena_rxeof() drains the CQ, hands the
+    frames to the stack via if_input(), recycles the slots and refills.
+
+Replace this file with the scraped serial console / netstat output when the
+checkpoint runs.

@@ -1,0 +1,7 @@
+/reference/freebsd/
+/reference/netbsd/
+/reference/amzn-drivers/
+/reference/linux-readonly/
+*.o
+*.ko
+/reference/openbsd/

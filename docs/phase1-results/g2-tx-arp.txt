@@ -1,0 +1,40 @@
+Task 7 (TX path via LLQ: negotiate placement, encap, doorbell, reclaim) —
+hardware checkpoint: PENDING.
+
+This file is a placeholder. The on-hardware checkpoint for Task 7 is gated by
+the controller-batched build (the real compile gate; the implementer cannot
+build on macOS) and the Task 2 ramdisk tooling, neither of which has run on
+this branch yet. Do NOT treat the absence of console output here as a pass.
+
+Expected behaviour once the ramdisk boots on a t4g.nano and an address is
+configured. The auto-run script does:
+  ifconfig ena0 inet 169.254.1.2/30 up
+  arping / ping a peer in 169.254.1.0/30   # forces an ARP request out ena0
+  arp -an                                  # expect a resolved neighbour entry
+
+Markers:
+  At attach, the placement-negotiation line is printed (grepped from console):
+    ena0: TX mode LLQ (push, 128B entry, 2 hdr descs, 96 hdr bytes)
+  After the ARP resolves (printed by the ramdisk harness):
+    ENA_P1: arp ok            # a resolved ARP entry / reply was observed
+
+The TX path that produces those frames:
+  - ena_attach() calls ena_tx_llq_negotiate(): GET_FEATURE(ENA_ADMIN_LLQ),
+    and if the device advertises LLQ (max_llq_num != 0) and supports the chosen
+    geometry, maps the BAR2 LLQ window and SET_FEATURE(ENA_ADMIN_LLQ) to commit
+    INLINE_HEADER / MULTIPLE_DESCS_PER_ENTRY / 2-descs-before-header / 128B.
+  - ena_init() creates the IO TX queue (CREATE_CQ then CREATE_SQ, TX direction,
+    placement = DEV for LLQ) and records the doorbell / unmask / LLQ-descriptor
+    offsets from the responses.
+  - ena_start() -> ena_encap(): bus_dmamap_load_mbuf (m_defrag to <= 2 segs),
+    builds the LLQ entry (descriptors + inline header) in a host bounce buffer,
+    PREWRITE-syncs the payload, writes the whole 128B entry into the BAR2 LLQ
+    window (bus_space_write_region_4 + BUS_SPACE_BARRIER_WRITE), then rings the
+    TX SQ doorbell.
+  - The device DMA-reads the payload, transmits, and posts a TX completion on
+    the TX CQ, raising the IO MSI-X vector (vector 1).
+  - ena_intr_io() -> ena_txeof() drains the TX CQ, frees the mbufs (POSTWRITE +
+    unload), clears oactive and re-arms the TX CQ interrupt.
+
+Replace this file with the scraped serial console / arp output when the
+checkpoint runs.

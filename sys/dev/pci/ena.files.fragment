@@ -1,0 +1,44 @@
+# ena.files.fragment
+#
+# Build-tree wiring for the Amazon Elastic Network Adapter (ena) driver.
+# These lines are NOT spliced automatically: Task 9 inserts them into the
+# real OpenBSD source tree (sys/dev/pci/files.pci and sys/dev/pci/pcidevs,
+# then regenerates pcidevs.h / pcidevs_data.h via `make` in sys/dev/pci).
+#
+# Device IDs transcribed from reference/freebsd/sys/dev/ena/ena.h:154-159
+# (BSD-2-Clause), cross-checked against
+# reference/amzn-drivers/kernel/linux/ena/ena_pci_id_tbl.h:10-26.
+
+
+# ============================================================================
+# 1. sys/dev/pci/files.pci
+# ----------------------------------------------------------------------------
+# Append to the network-device section. "ether, ifnet, ifmedia, mii" follow
+# the if_mcx.c attribute set; Phase 0 only needs the file + attach lines, but
+# the ifnet attributes belong on the device once it presents an interface.
+
+device	ena: ether, ifnet, ifmedia
+attach	ena at pci
+file	dev/pci/if_ena.c			ena
+
+
+# ============================================================================
+# 2. sys/dev/pci/pcidevs
+# ----------------------------------------------------------------------------
+# (a) Vendor line. OpenBSD's pcidevs does not yet carry Amazon; add it in the
+#     vendor block, kept in numeric order by id.
+
+vendor AMAZON			0x1d0f	Amazon.com
+
+# (b) Product lines. Add in the Amazon products section (create it if absent),
+#     in numeric order by product id.
+
+product AMAZON ENA_PF		0x0ec2	Elastic Network Adapter (PF)
+product AMAZON ENA_PF_RSERV0	0x1ec2	Elastic Network Adapter (PF, LLQ)
+product AMAZON ENA_VF		0xec20	Elastic Network Adapter (VF)
+product AMAZON ENA_VF_RSERV0	0xec21	Elastic Network Adapter (VF, LLQ)
+
+# After editing pcidevs, regenerate the generated headers:
+#     cd sys/dev/pci && make -f Makefile  # runs devlist2h.awk
+# producing the PCI_VENDOR_AMAZON / PCI_PRODUCT_AMAZON_ENA_* macros that
+# if_ena.c's ena_devices[] table references.
