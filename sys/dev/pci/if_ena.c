@@ -534,6 +534,14 @@ ena_attach(struct device *parent, struct device *self, void *aux)
 		ifp->if_xflags = IFXF_MPSAFE;
 		ifp->if_qstart = ena_start;
 		/*
+		 * Advertise the device's maximum MTU so ether_ioctl permits jumbo
+		 * SIOCSIFMTU up to it. sc_max_mtu is already an L2-payload MTU (the
+		 * device's max_mtu field excludes the Ethernet header), so assign it
+		 * directly with no header subtraction. if_mtu stays at the ETHERMTU
+		 * default until userland changes it.
+		 */
+		ifp->if_hardmtu = sc->sc_max_mtu;
+		/*
 		 * Advertise only the TX checksum offloads the device's OFFLOAD
 		 * feature actually reported (sc_tx_csum_l3/l4, read at attach in
 		 * ena_get_dev_attr). Advertising IFCAP_CSUM_* is what makes the
@@ -1046,6 +1054,15 @@ ena_get_dev_attr(struct ena_softc *sc)
 	max_mtu = letoh32(attr->max_mtu);
 
 	/*
+	 * Store the device's max L2-payload MTU so ena_attach can advertise it as
+	 * if_hardmtu and ena_set_mtu can bound jumbo requests. Floor at ETHERMTU
+	 * so a bogus/zero read never leaves if_hardmtu below the 1500 default
+	 * (which would make ether_ioctl reject every MTU, including 1500).
+	 * Re-runs harmlessly on the recovery path.
+	 */
+	sc->sc_max_mtu = (max_mtu < ETHERMTU) ? ETHERMTU : max_mtu;
+
+	/*
 	 * Stash the MAC into sc_ac.ac_enaddr for use by ena_attach (Task 5).
 	 * ether_ifattach reads ac_enaddr to fill the ifnet's link-layer address,
 	 * so this must happen before if_attach + ether_ifattach are called.
@@ -1182,6 +1199,37 @@ ena_set_host_attr(struct ena_softc *sc)
 	if (error != 0)
 		printf("%s: SET_FEATURE(HOST_ATTR_CONFIG) failed (%d)\n",
 		    sc->sc_dev.dv_xname, error);
+	return (error);
+}
+
+/*
+ * Program the device's frame-size limit with SET_FEATURE(MTU). This is a pure
+ * SET (no GET round-trip, unlike AENQ): the device validates received and
+ * transmitted frames against this MTU, so it must be set BEFORE the IO queues
+ * are created and kept in agreement with the RX buffer size (see ena_init).
+ * The device's mtu field is the L2 PAYLOAD MTU (Ethernet header excluded), so
+ * if_mtu is passed straight through with no header math (mirrors FreeBSD
+ * ena_com_set_dev_mtu, which passes if_getmtu()/ifr_mtu unchanged).
+ */
+int
+ena_set_mtu(struct ena_softc *sc, uint32_t mtu)
+{
+	struct ena_admin_aq_entry cmd;
+	struct ena_admin_set_feat_cmd *sf =
+	    (struct ena_admin_set_feat_cmd *)&cmd;
+	int error;
+
+	memset(&cmd, 0, sizeof(cmd));
+	sf->aq_common_descriptor.opcode = ENA_ADMIN_SET_FEATURE;
+	sf->aq_common_descriptor.flags = 0;	/* no control buffer */
+	sf->feat_common.feature_id = ENA_ADMIN_MTU;
+	sf->feat_common.feature_version = 0;
+	sf->u.mtu.mtu = htole32(mtu);		/* L2 payload MTU (no Ethernet hdr) */
+
+	error = ena_admin_poll(sc, &cmd, NULL);
+	if (error != 0)
+		printf("%s: SET_FEATURE(MTU=%u) failed (%d)\n",
+		    sc->sc_dev.dv_xname, mtu, error);
 	return (error);
 }
 
@@ -1711,9 +1759,16 @@ ena_rx_create(struct ena_softc *sc)
 	/* Per-slot bookkeeping + DMA maps for the data clusters. */
 	rxq->rxq_slots = mallocarray(rxq->rxq_depth,
 	    sizeof(struct ena_rx_slot), M_DEVBUF, M_WAITOK | M_ZERO);
+	/*
+	 * Size each slot's DMA map for the current MTU's buffer. A map's maxsize
+	 * is fixed at create time, so it must cover the largest cluster ena_rx_fill
+	 * will load. ena_init sets sc_rx_buf_size (floored at ENA_RX_BUF_SIZE)
+	 * before calling ena_rx_create on every bring-up, and ena_stop frees these
+	 * maps on every down, so a down/up bounce recreates them at the new size.
+	 */
 	for (i = 0; i < rxq->rxq_depth; i++) {
-		if (bus_dmamap_create(sc->sc_dmat, ENA_RX_BUF_SIZE, 1,
-		    ENA_RX_BUF_SIZE, 0, BUS_DMA_WAITOK | BUS_DMA_64BIT,
+		if (bus_dmamap_create(sc->sc_dmat, sc->sc_rx_buf_size, 1,
+		    sc->sc_rx_buf_size, 0, BUS_DMA_WAITOK | BUS_DMA_64BIT,
 		    &rxq->rxq_slots[i].rxs_map) != 0) {
 			printf("%s: can't create RX DMA map\n",
 			    sc->sc_dev.dv_xname);
@@ -1932,10 +1987,20 @@ ena_rx_fill(struct ena_softc *sc)
 		rxs = &rxq->rxq_slots[slot];
 		desc = &ring[slot];
 
-		m = MCLGETL(NULL, M_DONTWAIT, ENA_RX_BUF_SIZE);
+		m = MCLGETL(NULL, M_DONTWAIT, sc->sc_rx_buf_size);
 		if (m == NULL)
 			break;
-		m->m_len = m->m_pkthdr.len = ENA_RX_BUF_SIZE;
+		/*
+		 * Set m_len to the REQUESTED size, not m_ext.ext_size: MCLGETL rounds
+		 * the request up to the next cluster pool (e.g. 9018 -> a 9344-byte
+		 * pool), but the per-slot DMA map was created with maxsize ==
+		 * sc_rx_buf_size, so loading the full ext_size would exceed the map
+		 * and bus_dmamap_load_mbuf would fail -> no RX buffers posted -> RX
+		 * wedges. Loading exactly sc_rx_buf_size matches the map and still
+		 * holds a full mtu+L2+FCS frame (mirrors if_vmx, which loads JUMBO_LEN
+		 * not the cluster's ext_size). desc->length then follows ds_len below.
+		 */
+		m->m_len = m->m_pkthdr.len = sc->sc_rx_buf_size;
 
 		if (bus_dmamap_load_mbuf(sc->sc_dmat, rxs->rxs_map, m,
 		    BUS_DMA_NOWAIT) != 0) {
@@ -2498,14 +2563,29 @@ ena_tx_create(struct ena_softc *sc)
 	/* Per-slot bookkeeping + DMA maps for the packet mbufs. */
 	txq->txq_slots = mallocarray(txq->txq_depth,
 	    sizeof(struct ena_tx_slot), M_DEVBUF, M_WAITOK | M_ZERO);
-	for (i = 0; i < txq->txq_depth; i++) {
-		if (bus_dmamap_create(sc->sc_dmat, ENA_TX_MAX_SEGS * MCLBYTES,
-		    ENA_TX_MAX_SEGS, MCLBYTES, 0,
-		    BUS_DMA_WAITOK | BUS_DMA_64BIT,
-		    &txq->txq_slots[i].txs_map) != 0) {
-			printf("%s: can't create TX DMA map\n",
-			    sc->sc_dev.dv_xname);
-			goto free_maps;
+	{
+		/*
+		 * Size the TX maps for the largest frame the device MTU allows so
+		 * jumbo packets can be transmitted. ena_encap m_defrags any chain
+		 * with more than ENA_TX_MAX_SEGS segments into one contiguous
+		 * cluster, so a jumbo packet loads as a single segment up to the
+		 * whole frame -- hence maxsegsz must be the full frame, not MCLBYTES
+		 * (a 9000-byte segment against a 2KB maxsegsz would fail to load).
+		 * Never below the old 2-cluster floor.
+		 */
+		bus_size_t txbufsz = sc->sc_max_mtu + ETHER_HDR_LEN + ETHER_CRC_LEN;
+
+		if (txbufsz < ENA_TX_MAX_SEGS * MCLBYTES)
+			txbufsz = ENA_TX_MAX_SEGS * MCLBYTES;
+		for (i = 0; i < txq->txq_depth; i++) {
+			if (bus_dmamap_create(sc->sc_dmat, txbufsz,
+			    ENA_TX_MAX_SEGS, txbufsz, 0,
+			    BUS_DMA_WAITOK | BUS_DMA_64BIT,
+			    &txq->txq_slots[i].txs_map) != 0) {
+				printf("%s: can't create TX DMA map\n",
+				    sc->sc_dev.dv_xname);
+				goto free_maps;
+			}
 		}
 	}
 
@@ -3382,6 +3462,24 @@ ena_init(struct ena_softc *sc)
 
 	timeout_set(&rxq->rxq_refill, ena_rx_refill, sc);
 
+	/*
+	 * Derive the RX cluster size from the active MTU and program the device
+	 * MTU, both while the IO queues are still down. The RX buffer must hold
+	 * the whole frame (mtu + Ethernet header + FCS) and never drop below the
+	 * 2KB default; the device MTU is the plain L2-payload if_mtu. Doing both
+	 * here from the same if_mtu, before ena_rx_create, guarantees the posted
+	 * RX descriptor length and the device's frame-size limit always agree: a
+	 * SET_FEATURE(MTU) larger than the RX buffers would let the device deliver
+	 * a frame the host buffer cannot hold (drop/FATAL, no scatter fallback).
+	 * Abort the bring-up if the device rejects the MTU.
+	 */
+	sc->sc_rx_buf_size = ifp->if_mtu + ETHER_HDR_LEN + ETHER_CRC_LEN;
+	if (sc->sc_rx_buf_size < ENA_RX_BUF_SIZE)
+		sc->sc_rx_buf_size = ENA_RX_BUF_SIZE;
+	error = ena_set_mtu(sc, ifp->if_mtu);
+	if (error != 0)
+		return (error);
+
 	error = ena_rx_create(sc);
 	if (error != 0)
 		return (error);
@@ -3397,7 +3495,20 @@ ena_init(struct ena_softc *sc)
 	 * depth, which masks to 0 and the device reads the ring as empty. Capping
 	 * the if_rxr budget at depth-1 keeps at most depth-1 descriptors posted.
 	 */
-	if_rxr_init(&rxq->rxq_rxr, 2, rxq->rxq_depth - 1);
+	{
+		u_int hi = rxq->rxq_depth - 1;
+
+		/*
+		 * Bound RX cluster memory for jumbo: at MTU 9000 each buffer is a
+		 * ~9.5KB pool cluster, so a full depth-1 ring would pin ~9.5MB on a
+		 * 467MB box. Cap the live-buffer budget (not the DMA ring geometry)
+		 * to 256 when jumbo (~2.4MB, comparable to the 1500 footprint); the
+		 * default MTU keeps the full depth-1 budget.
+		 */
+		if (sc->sc_rx_buf_size > MCLBYTES && hi > 256)
+			hi = 256;
+		if_rxr_init(&rxq->rxq_rxr, 2, hi);
+	}
 	ena_rx_fill(sc);
 
 	/*
@@ -3908,6 +4019,43 @@ ena_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 	case SIOCGIFMEDIA:
 	case SIOCSIFMEDIA:
 		error = ifmedia_ioctl(ifp, ifr, &sc->sc_media, cmd);
+		break;
+
+	case SIOCSIFMTU:
+		/*
+		 * OpenBSD ether_ioctl handles SIOCSIFMTU by setting if_mtu and
+		 * returning 0 (not ENETRESET), so the driver must act on the change
+		 * itself. Bound it against if_hardmtu (= the device max, advertised
+		 * at attach) exactly as ether_ioctl would, then, only on an actual
+		 * change while running, bounce the interface: ena_init rebuilds the
+		 * RX rings/DMA maps at the new buffer size and reprograms the device
+		 * MTU, both from the new if_mtu. ena_stop must precede ena_init,
+		 * which early-returns while IFF_RUNNING is set; a change while down
+		 * just records if_mtu and takes effect on the next IFF_UP.
+		 */
+		if (ifr->ifr_mtu < ETHERMIN || ifr->ifr_mtu > ifp->if_hardmtu) {
+			error = EINVAL;
+			break;
+		}
+		if (ifp->if_mtu != ifr->ifr_mtu) {
+			u_int omtu = ifp->if_mtu;
+
+			ifp->if_mtu = ifr->ifr_mtu;
+			if (ISSET(ifp->if_flags, IFF_RUNNING)) {
+				ena_stop(sc);
+				error = ena_init(sc);
+				if (error != 0) {
+					/*
+					 * The device rejected the new MTU, or the
+					 * rebuild failed. Roll back to the old MTU and
+					 * bring the interface back up so a bad MTU does
+					 * not strand a previously-running interface.
+					 */
+					ifp->if_mtu = omtu;
+					(void)ena_init(sc);
+				}
+			}
+		}
 		break;
 
 	default:

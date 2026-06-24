@@ -342,6 +342,8 @@ struct ena_softc {
 	uint8_t			 sc_tx_csum_l4;	/* dev supports TX L4 IPv4 csum (PART) */
 	uint8_t			 sc_rx_csum_l3;	/* dev supports RX IPv4 header csum */
 	uint8_t			 sc_rx_csum_l4;	/* dev supports RX L4 IPv4 csum */
+	uint32_t		 sc_max_mtu;	/* device max L2-payload MTU (GET dev_attr) */
+	uint32_t		 sc_rx_buf_size; /* per-desc RX cluster size, derived from if_mtu */
 
 	/* DMA tag for admin/IO queue allocations (Tasks 5-8) */
 	bus_dma_tag_t		 sc_dmat;
@@ -495,6 +497,7 @@ int	ena_admin_init(struct ena_softc *);
 int	ena_admin_poll(struct ena_softc *, struct ena_admin_aq_entry *,
 	    struct ena_admin_acq_entry *);
 int	ena_get_dev_attr(struct ena_softc *);
+int	ena_set_mtu(struct ena_softc *, uint32_t);
 int	ena_aenq_init(struct ena_softc *);
 void	ena_aenq_intr(struct ena_softc *);
 

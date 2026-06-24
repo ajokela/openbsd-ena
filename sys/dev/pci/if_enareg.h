@@ -284,6 +284,13 @@ struct ena_admin_get_feat_resp {
 #define ENA_ADMIN_AENQ_CONFIG				26
 
 /*
+ * MTU feature (ena_admin_defs.h:91 — ENA_ADMIN_MTU = 14). SET_FEATURE(MTU)
+ * programs the device's maximum L2-payload frame size. The value EXCLUDES the
+ * Ethernet header: it is the plain 1500/9000 if_mtu, not mtu+header.
+ */
+#define ENA_ADMIN_MTU					14
+
+/*
  * Stateless offload capability feature (ena_admin_defs.h:64). GET_FEATURE on
  * this id returns ena_admin_feature_offload_desc; the driver caches which RX/TX
  * checksum offloads the device supports.
@@ -334,6 +341,14 @@ struct ena_admin_set_feature_host_attr_desc {
 } __packed;
 
 /*
+ * ena_admin_defs.h:789 — SET_FEATURE(MTU) body. The mtu field is the L2
+ * payload MTU (Ethernet header excluded), so it maps directly to if_mtu.
+ */
+struct ena_admin_set_feature_mtu_desc {
+	uint32_t	mtu;		/* L2 payload MTU (no Ethernet header) */
+} __packed;
+
+/*
  * AENQ_CONFIG feature payload (ena_admin_defs.h:936). Two 32-bit group
  * bitmasks: supported_groups read back via GET_FEATURE, enabled_groups
  * written via SET_FEATURE to subscribe a subset.
@@ -352,6 +367,7 @@ struct ena_admin_set_feat_cmd {
 		uint32_t				raw[11];
 		struct ena_admin_feature_aenq_desc	aenq;
 		struct ena_admin_set_feature_host_attr_desc host_attr;
+		struct ena_admin_set_feature_mtu_desc	mtu;
 	} u;
 } __packed;
 
