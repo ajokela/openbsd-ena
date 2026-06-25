@@ -1252,6 +1252,7 @@ ena_set_host_attr(struct ena_softc *sc)
 	hi = (struct ena_admin_host_info *)ENA_DMA_KVA(&sc->sc_host_attr_dma);
 	memset(hi, 0, sizeof(*hi));
 	hi->os_type = htole32(ENA_ADMIN_OS_LINUX);
+	hi->driver_version = htole32(ENA_ADMIN_HOST_INFO_DRIVER_VERSION);
 	hi->ena_spec_version = htole16(ENA_ADMIN_HOST_INFO_SPEC_VERSION);
 	hi->num_cpus = htole16(ncpus);
 

@@ -354,6 +354,8 @@ struct ena_admin_get_feat_resp {
 #define ENA_ADMIN_OS_LINUX				1	/* ena_com.h:30 */
 /* ENA spec version the driver implements: (major << 8) | minor = 2.0. */
 #define ENA_ADMIN_HOST_INFO_SPEC_VERSION		((2 << 8) | 0)
+/* ENA driver version 2.0.0, encoded as major | minor << 8 | subminor << 16. */
+#define ENA_ADMIN_HOST_INFO_DRIVER_VERSION		0x00000002
 
 /* ena_admin_defs.h:1043 — 4KB host-info page (only the head is meaningful). */
 struct ena_admin_host_info {
