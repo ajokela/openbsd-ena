@@ -259,6 +259,31 @@ struct ena_admin_feature_offload_desc {
 	uint32_t	rx_enabled;	/* RX offload currently-enabled bitmap */
 } __packed;
 
+/*
+ * ena_admin_defs.h — ENA_ADMIN_MAX_QUEUES_EXT = 7. The device's per-direction
+ * max IO queue counts and ring depths; read at attach to bound the host
+ * queue-count and depth requests (FreeBSD reads this before creating IO queues).
+ */
+#define ENA_ADMIN_MAX_QUEUES_EXT			7
+struct ena_admin_queue_ext_feature_fields {
+	uint32_t	max_tx_sq_num;
+	uint32_t	max_tx_cq_num;
+	uint32_t	max_rx_sq_num;
+	uint32_t	max_rx_cq_num;
+	uint32_t	max_tx_sq_depth;
+	uint32_t	max_tx_cq_depth;
+	uint32_t	max_rx_sq_depth;
+	uint32_t	max_rx_cq_depth;
+	uint32_t	max_tx_header_size;
+	uint16_t	max_per_packet_tx_descs;
+	uint16_t	max_per_packet_rx_descs;
+} __packed;
+struct ena_admin_queue_ext_feature_desc {
+	uint8_t		version;
+	uint8_t		reserved1[3];
+	struct ena_admin_queue_ext_feature_fields f;
+} __packed;
+
 /* ena_admin_defs.h:1077 — GET_FEATURE command (64-byte SQ payload). */
 struct ena_admin_get_feat_cmd {
 	struct ena_admin_aq_common_desc			aq_common_descriptor;
@@ -274,6 +299,7 @@ struct ena_admin_get_feat_resp {
 		uint32_t				raw[14];
 		struct ena_admin_device_attr_feature_desc dev_attr;
 		struct ena_admin_feature_offload_desc	offload;
+		struct ena_admin_queue_ext_feature_desc	maxq;
 	} u;
 } __packed;
 

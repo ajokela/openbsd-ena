@@ -54,7 +54,8 @@ implements the full Phase-1 bring-up and data path:
 - **IO queues** — one RX/TX queue pair per usable CPU (`CREATE_CQ` /
   `CREATE_SQ`), each on its own MSI-X vector with `bus_dma(9)`-mapped
   descriptor rings and mbuf buffers; the queue count follows the CPU count
-  via `intrmap(9)`.
+  via `intrmap(9)`, bounded by the device's advertised maximum
+  (`GET_FEATURE(MAX_QUEUES_EXT)`), and ring depths are capped at the device max.
 - **RSS** — receive-side scaling spreads RX across the queues by the device's
   Toeplitz hash. The indirection table is programmed where the VF permits it
   (many VFs manage the hash internally and still spread RX); `ph_flowid` keeps

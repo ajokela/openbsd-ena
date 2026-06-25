@@ -435,6 +435,13 @@ ena_attach(struct device *parent, struct device *self, void *aux)
 		goto disestablish_mgmt;
 	}
 	sc->sc_nqueues = intrmap_count(sc->sc_intrmap);
+	/*
+	 * Arrays + IO interrupts are sized to this count NOW; the device's max
+	 * queue count is only known after the admin queue is up (ena_get_dev_attr
+	 * below), so sc_nqueues may be clamped DOWN there. Keep the allocated count
+	 * separately: free/disestablish must use it, not the clamped active count.
+	 */
+	sc->sc_nqueues_alloc = sc->sc_nqueues;
 
 	sc->sc_rxq = mallocarray(sc->sc_nqueues, sizeof(struct ena_rxq),
 	    M_DEVBUF, M_WAITOK | M_ZERO);
@@ -511,6 +518,20 @@ ena_attach(struct device *parent, struct device *self, void *aux)
 		printf("\n%s: device attributes query failed\n",
 		    sc->sc_dev.dv_xname);
 		goto disestablish_io;
+	}
+
+	/*
+	 * Clamp the active queue count to what the device actually supports
+	 * (MAX_QUEUES_EXT, read above). On AWS the VF provisions a queue per vCPU
+	 * so this is normally a no-op, but never ask for more IO queues than the
+	 * device has -- the surplus arrays/vectors stay allocated (freed via
+	 * sc_nqueues_alloc) but unused. Queue creation, RSS, and the data path all
+	 * use the clamped sc_nqueues.
+	 */
+	if (sc->sc_nqueues > sc->sc_max_io_queues) {
+		printf("%s: clamping %u IO queues to device max %u\n",
+		    sc->sc_dev.dv_xname, sc->sc_nqueues, sc->sc_max_io_queues);
+		sc->sc_nqueues = sc->sc_max_io_queues;
 	}
 
 	/*
@@ -646,14 +667,16 @@ ena_attach(struct device *parent, struct device *self, void *aux)
 	 * (IO before management) before freeing DMA memory.
 	 */
 disestablish_io:
-	for (i = 0; i < sc->sc_nqueues; i++) {
+	/* sc_nqueues_alloc: the count arrays/vectors were sized to (>= the clamped
+	 * active sc_nqueues), so unwind by it -- not the possibly-clamped count. */
+	for (i = 0; i < sc->sc_nqueues_alloc; i++) {
 		if (sc->sc_queues[i].tag != NULL)
 			pci_intr_disestablish(sc->sc_pc, sc->sc_queues[i].tag);
 	}
 	free(sc->sc_queues, M_DEVBUF,
-	    sc->sc_nqueues * sizeof(struct ena_queue));
-	free(sc->sc_rxq, M_DEVBUF, sc->sc_nqueues * sizeof(struct ena_rxq));
-	free(sc->sc_txq, M_DEVBUF, sc->sc_nqueues * sizeof(struct ena_txq));
+	    sc->sc_nqueues_alloc * sizeof(struct ena_queue));
+	free(sc->sc_rxq, M_DEVBUF, sc->sc_nqueues_alloc * sizeof(struct ena_rxq));
+	free(sc->sc_txq, M_DEVBUF, sc->sc_nqueues_alloc * sizeof(struct ena_txq));
 	intrmap_destroy(sc->sc_intrmap);
 disestablish_mgmt:
 	pci_intr_disestablish(sc->sc_pc, sc->sc_mgmt_ih);
@@ -1191,6 +1214,52 @@ ena_get_dev_attr(struct ena_softc *sc)
 	printf("%s: offload tx_l3=%u tx_l4=%u rx_l3=%u rx_l4=%u\n",
 	    sc->sc_dev.dv_xname, sc->sc_tx_csum_l3, sc->sc_tx_csum_l4,
 	    sc->sc_rx_csum_l3, sc->sc_rx_csum_l4);
+
+	/*
+	 * --- MAX_QUEUES_EXT via GET_FEATURE, response INLINE. ---
+	 *
+	 * The device's per-direction max IO queue counts and ring depths. Used to
+	 * bound the host's queue-count (ena_attach) and depth (ena_{rx,tx}_create)
+	 * requests so we never ask for more than the VF supports. Default to the
+	 * compile-time caps so a device that does not advertise the feature (bit
+	 * not set in supported_features) keeps the pre-Task-2 behaviour (no clamp).
+	 */
+	sc->sc_max_io_queues = ENA_MAX_IO_QUEUES;
+	sc->sc_max_rx_depth = ENA_RX_QUEUE_DEPTH;
+	sc->sc_max_tx_depth = ENA_TX_QUEUE_DEPTH;
+	if (sc->sc_supported_features & (1U << ENA_ADMIN_MAX_QUEUES_EXT)) {
+		memset(&cmd, 0, sizeof(cmd));
+		gf->aq_common_descriptor.opcode = ENA_ADMIN_GET_FEATURE;
+		gf->aq_common_descriptor.flags = 0;
+		gf->control_buffer.length = 0;	/* inline response, like dev_attr */
+		gf->feat_common.feature_id = ENA_ADMIN_MAX_QUEUES_EXT;
+		gf->feat_common.feature_version = 1; /* ENA_FEATURE_MAX_QUEUE_EXT_VER */
+
+		if (ena_admin_poll(sc, &cmd, &resp) == 0) {
+			struct ena_admin_queue_ext_feature_fields *q =
+			    &gr->u.maxq.f;
+			uint32_t ioq, rxd, txd;
+
+			ioq = MIN(MIN(letoh32(q->max_rx_sq_num),
+			    letoh32(q->max_rx_cq_num)),
+			    MIN(letoh32(q->max_tx_sq_num),
+			    letoh32(q->max_tx_cq_num)));
+			rxd = MIN(letoh32(q->max_rx_sq_depth),
+			    letoh32(q->max_rx_cq_depth));
+			txd = MIN(letoh32(q->max_tx_sq_depth),
+			    letoh32(q->max_tx_cq_depth));
+			if (ioq > 0)
+				sc->sc_max_io_queues = ioq;
+			if (rxd > 0)
+				sc->sc_max_rx_depth = rxd;
+			if (txd > 0)
+				sc->sc_max_tx_depth = txd;
+		} else
+			error = 0;	/* optional; keep the defaults above */
+	}
+	printf("%s: device max %u IO queues, RX depth %u, TX depth %u\n",
+	    sc->sc_dev.dv_xname, sc->sc_max_io_queues, sc->sc_max_rx_depth,
+	    sc->sc_max_tx_depth);
 
 	return (0);
 }
@@ -1865,16 +1934,16 @@ ena_detach(struct device *self, int flags)
 	 * Disestablish in reverse establish order: IO vector first, then
 	 * management. Guards on NULL so partial-attach detach is safe.
 	 */
-	for (i = 0; i < sc->sc_nqueues; i++) {
+	for (i = 0; i < sc->sc_nqueues_alloc; i++) {
 		if (sc->sc_queues[i].tag != NULL) {
 			pci_intr_disestablish(sc->sc_pc, sc->sc_queues[i].tag);
 			sc->sc_queues[i].tag = NULL;
 		}
 	}
 	free(sc->sc_queues, M_DEVBUF,
-	    sc->sc_nqueues * sizeof(struct ena_queue));
-	free(sc->sc_rxq, M_DEVBUF, sc->sc_nqueues * sizeof(struct ena_rxq));
-	free(sc->sc_txq, M_DEVBUF, sc->sc_nqueues * sizeof(struct ena_txq));
+	    sc->sc_nqueues_alloc * sizeof(struct ena_queue));
+	free(sc->sc_rxq, M_DEVBUF, sc->sc_nqueues_alloc * sizeof(struct ena_rxq));
+	free(sc->sc_txq, M_DEVBUF, sc->sc_nqueues_alloc * sizeof(struct ena_txq));
 	if (sc->sc_intrmap != NULL)
 		intrmap_destroy(sc->sc_intrmap);
 	if (sc->sc_mgmt_ih != NULL) {
@@ -2008,7 +2077,7 @@ ena_rx_create(struct ena_softc *sc, unsigned int idx)
 	int error = ENOMEM;
 	uint16_t i;
 
-	rxq->rxq_depth = ENA_RX_QUEUE_DEPTH;
+	rxq->rxq_depth = MIN(ENA_RX_QUEUE_DEPTH, sc->sc_max_rx_depth);
 	rxq->rxq_sq_tail = 0;
 	rxq->rxq_sq_phase = 1;	/* first SQ descriptor is written phase 1 */
 	rxq->rxq_cq_head = 0;
@@ -2798,7 +2867,7 @@ ena_tx_create(struct ena_softc *sc, unsigned int idx)
 	int error = ENOMEM;
 	uint16_t i;
 
-	txq->txq_depth = ENA_TX_QUEUE_DEPTH;
+	txq->txq_depth = MIN(ENA_TX_QUEUE_DEPTH, sc->sc_max_tx_depth);
 	txq->txq_sq_tail = 0;
 	txq->txq_sq_phase = 1;	/* first SQ descriptor is written phase 1 */
 	txq->txq_cq_head = 0;

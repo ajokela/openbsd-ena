@@ -418,9 +418,12 @@ struct ena_softc {
 	int			 sc_nvec;	/* vectors established (1 + sc_nqueues) */
 	void			*sc_mgmt_ih;	/* management vector handle (vector 0) */
 	struct intrmap		*sc_intrmap;	/* IO vector -> CPU distribution */
-	unsigned int		 sc_nqueues;	/* number of IO queue pairs */
-	struct ena_queue	*sc_queues;	/* sc_nqueues IO interrupt containers */
-	unsigned int		 sc_max_io_queues; /* device max IO queue pairs */
+	unsigned int		 sc_nqueues;	/* active IO queue pairs (<= alloc) */
+	unsigned int		 sc_nqueues_alloc; /* allocated/established count (free/disestablish by this) */
+	struct ena_queue	*sc_queues;	/* sc_nqueues_alloc IO interrupt containers */
+	unsigned int		 sc_max_io_queues; /* device max IO queue pairs (GET MAX_QUEUES_EXT) */
+	unsigned int		 sc_max_rx_depth; /* device max RX SQ/CQ depth */
+	unsigned int		 sc_max_tx_depth; /* device max TX SQ/CQ depth */
 
 	/*
 	 * Asynchronous Event Notification Queue (Task 4). sc_aenq_dma holds the
